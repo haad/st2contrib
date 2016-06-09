@@ -9,8 +9,9 @@ VIRTUALENV_DIR ?= virtualenv
 ST2_REPO_PATH ?= /tmp/st2
 ST2_REPO_BRANCH ?= master
 FORCE_CHECK_ALL_FILES =? false
+FORCE_CHECK_PACK =? false
 
-export ST2_REPO_PATH ROOT_DIR FORCE_CHECK_ALL_FILES
+export ST2_REPO_PATH ROOT_DIR FORCE_CHECK_ALL_FILES FORCE_CHECK_PACK
 
 # All components are prefixed by st2
 COMPONENTS := $(wildcard /tmp/st2/st2*)
@@ -44,43 +45,51 @@ packs-tests: requirements .clone_st2_repo .packs-tests
 	@echo
 	@echo "==================== flake8 ===================="
 	@echo
-	. $(VIRTUALENV_DIR)/bin/activate; if [ ! "${CHANGED_PY}" ]; then echo No files have changed, skipping run...; fi; for file in ${CHANGED_PY}; do if [ -n "$$file" ]; then flake8 --config ./.flake8 $$file; fi; done
+	. $(VIRTUALENV_DIR)/bin/activate; if [ ! "${CHANGED_PY}" ]; then echo No files have changed, skipping run...; fi; for file in ${CHANGED_PY}; do if [ -n "$$file" ]; then flake8 --config ./lint-configs/python/.flake8 $$file || exit 1 ; fi; done
 
 .PHONY: .pylint
 .pylint:
 	@echo
 	@echo "==================== pylint ===================="
 	@echo
-	. $(VIRTUALENV_DIR)/bin/activate; if [ ! "${CHANGED_PACKS}" ]; then echo No packs have changed, skipping run...; fi; for pack in $(CHANGED_PACKS); do if [ -n "$$pack" ]; then scripts/pylint-pack.sh $$pack; fi; done
+	. $(VIRTUALENV_DIR)/bin/activate; if [ ! "${CHANGED_PACKS}" ]; then echo No packs have changed, skipping run...; fi; for pack in $(CHANGED_PACKS); do if [ -n "$$pack" ]; then scripts/pylint-pack.sh $$pack || exit 1 ; fi; done
 
 .PHONY: .configs-check
 .configs-check:
 	@echo
 	@echo "==================== configs-check ===================="
 	@echo
-	. $(VIRTUALENV_DIR)/bin/activate; if [ ! "${CHANGED_YAML}" ]; then echo No files have changed, skipping run...; fi; for file in $(CHANGED_YAML); do if [ -n "$$file" ]; then ./scripts/validate-yaml-file.sh $$file; fi; done
-	. $(VIRTUALENV_DIR)/bin/activate; if [ ! "${CHANGED_JSON}" ]; then echo No files have changed, skipping run...; fi; for file in $(CHANGED_JSON); do if [ -n "$$file" ]; then ./scripts/validate-json-file.sh $$file; fi; done
+	. $(VIRTUALENV_DIR)/bin/activate; if [ ! "${CHANGED_YAML}" ]; then echo No files have changed, skipping run...; fi; for file in $(CHANGED_YAML); do if [ -n "$$file" ]; then ./scripts/validate-yaml-file.sh $$file || exit 1 ; fi; done
+	. $(VIRTUALENV_DIR)/bin/activate; if [ ! "${CHANGED_JSON}" ]; then echo No files have changed, skipping run...; fi; for file in $(CHANGED_JSON); do if [ -n "$$file" ]; then ./scripts/validate-json-file.sh $$file || exit 1 ; fi; done
 
 .PHONY: .metadata-check
 .metadata-check:
 	@echo
 	@echo "==================== metadata-check ===================="
 	@echo
-	. $(VIRTUALENV_DIR)/bin/activate; if [ ! "${CHANGED_PACKS}" ]; then echo No packs have changed, skipping run...; fi; for pack in $(CHANGED_PACKS); do if [ -n "$$pack" ]; then ${ROOT_DIR}/scripts/validate-pack-metadata-exists.sh $$pack; fi; done
+	. $(VIRTUALENV_DIR)/bin/activate; if [ ! "${CHANGED_PACKS}" ]; then echo No packs have changed, skipping run...; fi; for pack in $(CHANGED_PACKS); do if [ -n "$$pack" ]; then ${ROOT_DIR}/scripts/validate-pack-metadata-exists.sh $$pack || exit 1 ; fi; done
 
 .PHONY: .packs-resource-register
 .packs-resource-register:
 	@echo
 	@echo "==================== packs-resource-register ===================="
 	@echo
-	. $(VIRTUALENV_DIR)/bin/activate; if [ ! "${CHANGED_PACKS}" ]; then echo No packs have changed, skipping run...; fi; for pack in $(CHANGED_PACKS); do if [ -n "$$pack" ]; then scripts/register-pack-resources.sh $$pack; fi; done
+	. $(VIRTUALENV_DIR)/bin/activate; if [ ! "${CHANGED_PACKS}" ]; then echo No packs have changed, skipping run...; fi; for pack in $(CHANGED_PACKS); do if [ -n "$$pack" ]; then scripts/register-pack-resources.sh $$pack || exit 1 ; fi; done
 
 .PHONY: .packs-tests
 .packs-tests:
 	@echo
 	@echo "==================== packs-tests ===================="
 	@echo
-	. $(VIRTUALENV_DIR)/bin/activate; if [ ! "${CHANGED_PACKS}" ]; then echo No packs have changed, skipping run...; fi; for pack in $(CHANGED_PACKS); do if [ -n "$$pack" ]; then $(ST2_REPO_PATH)/st2common/bin/st2-run-pack-tests -x -p $$pack; fi; done
+	. $(VIRTUALENV_DIR)/bin/activate; if [ ! "${CHANGED_PACKS}" ]; then echo No packs have changed, skipping run...; fi; for pack in $(CHANGED_PACKS); do if [ -n "$$pack" ]; then $(ST2_REPO_PATH)/st2common/bin/st2-run-pack-tests -x -p $$pack || exit 1 ; fi; done
+
+.PHONY: packs-missing-tests
+packs-missing-tests:
+	@echo
+	@echo "==================== pack-missing-tests ===================="
+	@echo
+	if [ ! "${CHANGED_PACKS}" ]; then echo No packs have changed, skipping run...; fi; for pack in $(CHANGED_PACKS); do if [ -n "$$pack" ]; then scripts/pack-missing-tests.sh $$pack || exit 1 ; fi; done
+
 
 .PHONY: .clone_st2_repo
 .clone_st2_repo:

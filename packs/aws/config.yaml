@@ -1,8 +1,8 @@
 ---
 setup:
   region: ""
-  aws_access_key_id: ""
-  aws_secret_access_key: ""
+  aws_access_key_id: null
+  aws_secret_access_key: null
 interval: 20
 st2_user_data: "/opt/stackstorm/packs/aws/actions/scripts/bootstrap_user.sh"
 
@@ -12,4 +12,4 @@ service_notifications_sensor:
   path: "/my-path"
 
 sqs_sensor:
-  input_queue: ""
+  input_queues:

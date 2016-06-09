@@ -13,6 +13,7 @@ env:
     - "TASK=metadata-check"
     - "TASK=packs-resource-register"
     - "TASK=packs-tests"
+    - "TASK=packs-missing-tests-check"
 services:
   # Note: MongoDB and RabbitMQ is needed for packs-resource-register check
   - mongodb
@@ -22,7 +23,9 @@ addons:
     packages:
       - git  # needed by git-changes scripts
       - libsox-dev  # needed by witai pack
+      - freetds-dev  # needed by mssql package
 cache:
+  apt: true
   directories:
     - $HOME/.pip-cache/
 install:

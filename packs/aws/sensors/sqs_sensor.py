@@ -2,9 +2,9 @@
 This is generic SQS Sensor using boto3 api to fetch messages from sqs queue.
 After receiving a message it's content is passed as payload to a trigger 'aws.sqs_new_message'
 
-This sensor can be configured either by using config.yaml withing a pack or by creating
+This sensor can be configured either by using config.yaml within a pack or by creating
 following values in datastore:
-    - aws.input_queues (list queues as comma separrated string: first_queue,second_queue)
+    - aws.input_queues (list queues as comma separated string: first_queue,second_queue)
     - aws.aws_access_key_id
     - aws.aws_secret_access_key
     - aws.region
@@ -22,6 +22,7 @@ For configuration in config.yaml with config like this
 If any value exist in datastore it will be taken instead of any value in config.yaml
 """
 
+import six
 from boto3.session import Session
 from botocore.exceptions import ClientError
 
@@ -40,6 +41,8 @@ class AWSSQSSensor(PollingSensor):
         # from config.yaml we can receive a list
         if type(queues) is str:
             self.input_queues = queues.split(', ')
+        if isinstance(queues, six.string_types):
+            self.input_queues = [x.strip() for x in queues.split(',')]
         else:
             self.input_queues = queues
 
